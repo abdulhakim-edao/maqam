@@ -100,8 +100,8 @@ export default function QuranReader() {
   useEffect(() => {
     const onKey = e => {
       if (e.target.tagName === 'INPUT') return
-      if (e.key === 'ArrowLeft')  go(-1)
-      if (e.key === 'ArrowRight') go(1)
+      if (e.key === 'ArrowLeft')  go(1)
+      if (e.key === 'ArrowRight') go(-1)
       if (e.key === 'ArrowUp')    go(-10)
       if (e.key === 'ArrowDown')  go(10)
     }
