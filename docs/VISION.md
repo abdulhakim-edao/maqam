@@ -28,6 +28,7 @@ other. None of them feel like they were made with love.
 Maqam is the Muslim life OS. Not a utility. An OS.
 
 It tracks your day around the five pillars:
+
 - When to pray (and whether you did)
 - Which direction to face
 - What to say after
@@ -46,21 +47,25 @@ pattern you return to.
 ## The Competition
 
 ### Muslim Pro
+
 - **30M+ users**, biggest in the market
 - **Fatal flaws**: sold user location data, ads during Salah, bloated, slow
 - **Our angle**: every Muslim who finds out about the data issue is a potential convert
 
 ### Athan / Athan Pro
+
 - Clean prayer time app, good iOS design
 - Limited scope — doesn't unify the experience
 - **Our angle**: add depth they don't have (offline Quran, Tasbih, community)
 
 ### Quran.com
+
 - Best Quran reading experience on web
 - Single-purpose, no prayer/qibla integration
 - **Our angle**: full Quran reader already shipping in Maqam, improving every sprint
 
 ### Al-Moazin / others
+
 - Regional focus, inconsistent quality
 - **Our angle**: consistent design and quality bar across all features
 
@@ -69,22 +74,26 @@ pattern you return to.
 ## How We Win
 
 ### 1. Privacy Is a Feature
+
 - Prayer calculation: 100% client-side. Never hits a server.
 - Location: used for calculation, never stored, never sent.
 - We say it clearly, repeatedly. Muslims are wary of this. We earn trust.
 
 ### 2. Zero Ads During Prayer
+
 - This is a moral line, not a business compromise.
 - We monetize through Premium and B2B Masjid Dashboards — not attention.
 - Muslim Pro lost users over this. We make the opposite promise, publicly.
 
 ### 3. Offline-First, Always
+
 - Works in the masjid basement with no signal.
 - Works on a plane crossing timezones.
 - Works in rural areas with spotty data.
 - Service worker caches everything. No spinner of shame before Fajr.
 
 ### 4. Design Like It Matters
+
 - Not another green and gold gradient.
 - Obsidian base. Warm amber accents. Lapis for action.
 - Arabic typography is primary, not an afterthought.
@@ -92,18 +101,21 @@ pattern you return to.
 - Feels like iOS without being a clone.
 
 ### 5. Respect for the Act of Worship
+
 - No gamification that cheapens the deen.
 - No streak-shaming ("you missed 3 days!").
 - No notifications during Salah time (configurable, opt-in only).
 - The app should feel like a tool for contemplation, not a Skinner box.
 
 ### 6. Unified Experience
+
 - Open the app, know your next prayer time, Hijri date, and current juz — all on one screen.
 - Jump to Quran from the prayer times screen.
 - Tasbih count feeds back into your daily dhikr log.
 - Everything talks to everything.
 
 ### 7. Speed as Respect
+
 - Sub-100ms tap response.
 - Page turns feel instant.
 - No loading skeletons where they're not needed.
@@ -131,6 +143,7 @@ If someone opens Maqam at Fajr, Dhuhr, and Isha — we've replaced their fragmen
 workflow. That's the win.
 
 Secondary metrics:
+
 - Quran pages read per DAU
 - Tasbih sessions per DAU
 - Retention D7, D30

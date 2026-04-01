@@ -33,14 +33,14 @@ GitHub: `https://github.com/Abdulhakim-Edao/Maqam`
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Web | React 19 + Vite |
-| Mobile (later) | React Native |
-| Backend (later) | Supabase |
-| AI feature (later) | Anthropic API — Islamic Q&A |
-| Storage | localStorage (now) → Supabase (later) |
-| Key libraries | adhan (prayer times), no other deps for MVP |
+| Layer              | Choice                                      |
+| ------------------ | ------------------------------------------- |
+| Web                | React 19 + Vite                             |
+| Mobile (later)     | React Native                                |
+| Backend (later)    | Supabase                                    |
+| AI feature (later) | Anthropic API — Islamic Q&A                 |
+| Storage            | localStorage (now) → Supabase (later)       |
+| Key libraries      | adhan (prayer times), no other deps for MVP |
 
 ---
 
@@ -48,13 +48,13 @@ GitHub: `https://github.com/Abdulhakim-Edao/Maqam`
 
 ### 5 Tabs (all complete)
 
-| Tab | Status |
-|---|---|
-| Prayer Times | ✅ Geolocation, 6 calc methods, countdown, Hijri date, Ramadan badges |
-| Qibla | ✅ RAF-smoothed live compass, neumorphic dish, aligned detection |
-| Adhkar | ✅ Morning/evening dhikr, tap counter, progress bars, midnight reset |
-| Islamic Calendar | ✅ Hijri grid, event dots, upcoming events list |
-| Quran Reader | ✅ See detail below |
+| Tab              | Status                                                                |
+| ---------------- | --------------------------------------------------------------------- |
+| Prayer Times     | ✅ Geolocation, 6 calc methods, countdown, Hijri date, Ramadan badges |
+| Qibla            | ✅ RAF-smoothed live compass, neumorphic dish, aligned detection      |
+| Adhkar           | ✅ Morning/evening dhikr, tap counter, progress bars, midnight reset  |
+| Islamic Calendar | ✅ Hijri grid, event dots, upcoming events list                       |
+| Quran Reader     | ✅ See detail below                                                   |
 
 ### Quran Reader — Full Feature List
 
@@ -132,14 +132,14 @@ maqam/
 
 ## Phase Roadmap
 
-| Phase | Scope | Status |
-|---|---|---|
-| 1 | Prayer times + Qibla + Adhkar | ✅ Done |
-| 2 | Quran reader, Islamic calendar, Ramadan mode, PWA | ✅ Done |
-| 3 | Tasbih counter, Masjid finder, Halal map | 🔜 Next |
-| 4 | Mobile app (React Native) | — |
-| 5 | Supabase backend, accounts, sync | — |
-| 6 | Monetization — Maqam Premium, Masjid Dashboard B2B | — |
+| Phase | Scope                                              | Status  |
+| ----- | -------------------------------------------------- | ------- |
+| 1     | Prayer times + Qibla + Adhkar                      | ✅ Done |
+| 2     | Quran reader, Islamic calendar, Ramadan mode, PWA  | ✅ Done |
+| 3     | Tasbih counter, Masjid finder, Halal map           | 🔜 Next |
+| 4     | Mobile app (React Native)                          | —       |
+| 5     | Supabase backend, accounts, sync                   | —       |
+| 6     | Monetization — Maqam Premium, Masjid Dashboard B2B | —       |
 
 ---
 
@@ -159,4 +159,3 @@ maqam/
 - Maqam Premium: $4.99/mo or $29/yr
 - Masjid Dashboard B2B (main revenue)
 - Halal marketplace affiliate listings
-

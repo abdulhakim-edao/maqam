@@ -20,13 +20,16 @@
 ## Auth Strategy
 
 ### Sign In Options
+
 - **Magic Link (email)** — no password to forget, no friction
 - **Google OAuth** — one tap
 - **Apple OAuth** — required for iOS App Store if other social logins present
 - **Anonymous** — use the app without an account; upgrade later without losing data
 
 ### Anonymous → Authenticated Migration
+
 Critical: users who use the app for weeks before creating an account must not lose data.
+
 - Local data stored under a stable anonymous user ID
 - On sign-up: merge local data to their new account
 - Supabase supports this pattern natively via `supabase.auth.linkIdentity()`
@@ -90,6 +93,7 @@ create table push_subscriptions (
 ```
 
 ### Row-Level Security (RLS)
+
 Every table has a policy: `using (user_id = auth.uid())`. Users only ever see their own data.
 
 ---
@@ -97,15 +101,18 @@ Every table has a policy: `using (user_id = auth.uid())`. Users only ever see th
 ## Sync Architecture
 
 ### Conflict Resolution
+
 Last-write-wins for settings. Merge for bookmarks (union of both sets). For tasbih sessions,
 insert-only: never mutate, just append.
 
 ### Optimistic Updates
+
 - UI updates immediately on user action
 - Sync happens in background via `supabase.from('bookmarks').upsert()`
 - If offline: queue in localStorage, flush on reconnect
 
 ### Real-time
+
 - Bookmarks sync in real-time across browser tabs and devices
 - Supabase real-time subscriptions on `bookmarks` table
 
@@ -114,6 +121,7 @@ insert-only: never mutate, just append.
 ## Push Notification Server
 
 ### Architecture
+
 - Supabase Edge Function: `send-prayer-notifications`
 - Supabase pg_cron: fires every minute
 - Function checks `push_subscriptions` table for users whose next prayer is due
@@ -121,6 +129,7 @@ insert-only: never mutate, just append.
 - iOS: APNs (via Capacitor native layer), Android: FCM, Web: Web Push API
 
 ### Privacy
+
 - Only data stored server-side: timezone, calc method, enabled prayers, push subscription
 - No location stored — prayer times calculated at send-time using stored lat/lon
 - Wait — store encrypted lat/lon only for users who explicitly enable cloud notifications

@@ -167,15 +167,6 @@ export default function Settings({ onRefreshLocation }) {
           </div>
           <a
             className="settings-option settings-link-row"
-            href="https://github.com/Abdulhakim-Edao/Maqam"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="settings-option-label">Open Source on GitHub</span>
-            <span className="settings-option-arrow">↗</span>
-          </a>
-          <a
-            className="settings-option settings-link-row"
             href="https://almaqam.app"
             target="_blank"
             rel="noopener noreferrer"

@@ -1,8 +1,31 @@
 import { useState, useEffect } from 'react'
 
-const DEFAULT    = { lat: 44.9778, lng: -93.2650 }
-const OVERPASS   = 'https://overpass-api.de/api/interpreter'
-const RADIUS_M   = 5000  // 5 km
+const DEFAULT  = { lat: 44.9778, lng: -93.2650 }
+const RADIUS_M = 5000  // 5 km
+
+// Fallback Overpass endpoints in order of preference
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.openstreetmap.ru/api/interpreter',
+]
+
+async function overpassFetch(query) {
+  for (const base of OVERPASS_MIRRORS) {
+    try {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 12000)
+      const r = await fetch(`${base}?data=${encodeURIComponent(query)}`, { signal: ctrl.signal })
+      clearTimeout(timer)
+      if (!r.ok) throw new Error('HTTP ' + r.status)
+      return await r.json()
+    } catch (e) {
+      if (e?.name === 'AbortError' || OVERPASS_MIRRORS.indexOf(base) < OVERPASS_MIRRORS.length - 1) continue
+      throw e
+    }
+  }
+  throw new Error('all mirrors failed')
+}
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R    = 6371000
@@ -14,7 +37,15 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+const USE_MILES = ['US', 'GB', 'LR', 'MM'].includes(
+  new Intl.Locale(navigator.language || 'en').region?.toUpperCase() ?? ''
+)
+
 function fmtDist(m) {
+  if (USE_MILES) {
+    const mi = m / 1609.344
+    return mi < 0.1 ? `${Math.round(m * 3.281)} ft` : `${mi.toFixed(1)} mi`
+  }
   return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`
 }
 
@@ -32,6 +63,7 @@ export default function MasjidFinder() {
   const [masajid, setMasajid]         = useState([])
   const [status, setStatus]           = useState('locating')  // locating | fetching | done | error
   const [usingDefault, setUsingDefault] = useState(false)
+  const [retryCount, setRetryCount]   = useState(0)
 
   // Geolocation
   useEffect(() => {
@@ -50,7 +82,7 @@ export default function MasjidFinder() {
     if (!location) return
     setStatus('fetching')
     const query = [
-      '[out:json][timeout:10];',
+      '[out:json][timeout:12];',
       '(',
       `node["amenity"="place_of_worship"]["religion"="muslim"](around:${RADIUS_M},${location.lat},${location.lng});`,
       `way["amenity"="place_of_worship"]["religion"="muslim"](around:${RADIUS_M},${location.lat},${location.lng});`,
@@ -59,11 +91,7 @@ export default function MasjidFinder() {
       'out center 30;',
     ].join('')
 
-    fetch(`${OVERPASS}?data=${encodeURIComponent(query)}`)
-      .then(r => {
-        if (!r.ok) throw new Error('HTTP ' + r.status)
-        return r.json()
-      })
+    overpassFetch(query)
       .then(data => {
         const seen = new Set()
         const items = data.elements
@@ -87,12 +115,12 @@ export default function MasjidFinder() {
         setStatus('done')
       })
       .catch(() => setStatus('error'))
-  }, [location])
+  }, [location, retryCount])
 
   return (
     <div className="masajid-page">
       <div className="masajid-header">
-        <p className="masajid-sub">Within 5 km{usingDefault ? ' · Default location (Minneapolis, MN)' : ''}</p>
+        <p className="masajid-sub">Within {USE_MILES ? '3 mi' : '5 km'}{usingDefault ? ' · Default location (Minneapolis, MN)' : ''}</p>
       </div>
 
       {(status === 'locating' || status === 'fetching') && (
@@ -104,7 +132,11 @@ export default function MasjidFinder() {
 
       {status === 'error' && (
         <div className="masajid-state masajid-error">
-          <p>Could not reach OpenStreetMap. Check your connection and try again.</p>
+          <p>Could not reach OpenStreetMap servers.</p>
+          <button
+            className="compass-btn"
+            onClick={() => { setStatus('fetching'); setRetryCount(n => n + 1) }}
+          >Try Again</button>
         </div>
       )}
 
