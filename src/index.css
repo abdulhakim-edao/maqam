@@ -2683,6 +2683,21 @@ body.quran-fs { background: #F5EDD8 !important; }
 .settings-link-row   .settings-option-label { color: var(--lapis); }
 .settings-link-row { text-decoration: none; }
 
+.notif-toggle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.notif-toggle.on {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
 .settings-footer {
   text-align: center;
   font-family: var(--font-arabic);

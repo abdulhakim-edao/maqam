@@ -3,10 +3,11 @@ import { createContext, useContext, useState, useCallback } from 'react'
 const SETTINGS_KEY = 'maqam_settings'
 
 const DEFAULTS = {
-  calcMethod:    'NorthAmerica',
-  asrMadhab:    'standard',      // 'standard' | 'hanafi'
-  highLatitude:  'middleOfNight', // 'none' | 'middleOfNight' | 'seventhOfNight' | 'twilightAngle'
-  numerals:     'western',       // 'western' | 'arabic'
+  calcMethod:            'NorthAmerica',
+  asrMadhab:            'standard',       // 'standard' | 'hanafi'
+  highLatitude:          'middleOfNight',  // 'none' | 'middleOfNight' | 'seventhOfNight' | 'twilightAngle'
+  numerals:             'western',        // 'western' | 'arabic'
+  notificationsEnabled: false,
 }
 
 function load() {

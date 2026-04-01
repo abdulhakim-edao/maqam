@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getPrayerTimes, getPrayersList, formatTime, formatCountdown } from '../utils/prayerCalc'
 import { getRamadanInfo } from '../utils/ramadan'
 import { useSettings } from '../utils/settings'
+import { scheduleNotifications, clearScheduled } from '../utils/notifications'
 
 const DEFAULT_LOCATION = { lat: 44.9778, lng: -93.2650 }
 
@@ -24,7 +25,7 @@ export default function PrayerTimes() {
   const [locationMsg, setLocationMsg] = useState(null)
   const [tomorrowFajr, setTomorrowFajr] = useState(null)
   const { settings } = useSettings()
-  const { calcMethod: methodKey, asrMadhab, highLatitude } = settings
+  const { calcMethod: methodKey, asrMadhab, highLatitude, notificationsEnabled } = settings
   const [isFasting, setIsFasting] = useState(false)
   const [ramadanCountdown, setRamadanCountdown] = useState('')
 
@@ -55,12 +56,18 @@ export default function PrayerTimes() {
     setPrayers(getPrayersList(times))
     setNextKey(times.nextPrayer())
 
+    if (notificationsEnabled) {
+      scheduleNotifications(times)
+    } else {
+      clearScheduled()
+    }
+
     // Tomorrow's Fajr needed for Ramadan suhoor countdown
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     const tTimes = getPrayerTimes(location.lat, location.lng, tomorrow, methodKey, asrMadhab, highLatitude)
     setTomorrowFajr(tTimes.fajr)
-  }, [location, methodKey, asrMadhab, highLatitude])
+  }, [location, methodKey, asrMadhab, highLatitude, notificationsEnabled])
 
   // Live countdown
   useEffect(() => {

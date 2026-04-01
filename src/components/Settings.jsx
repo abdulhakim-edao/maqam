@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useSettings } from '../utils/settings'
 import { CALC_METHODS } from '../utils/prayerCalc'
+import { requestNotificationPermission, getPermissionStatus } from '../utils/notifications'
 
 const ASR_OPTIONS = [
   { key: 'standard', label: 'Standard', sub: 'Shāfiʿī · Mālikī · Ḥanbalī' },
@@ -32,6 +34,26 @@ function Row({ label, sub, active, onClick }) {
 
 export default function Settings({ onRefreshLocation }) {
   const { settings, set } = useSettings()
+  const [permStatus, setPermStatus] = useState(() => getPermissionStatus())
+
+  async function handleNotifToggle() {
+    if (settings.notificationsEnabled) {
+      set('notificationsEnabled', false)
+      return
+    }
+    const status = await requestNotificationPermission()
+    setPermStatus(status)
+    if (status === 'granted') {
+      set('notificationsEnabled', true)
+    }
+  }
+
+  const notifSubtext = () => {
+    if (permStatus === 'unsupported') return 'Not supported in this browser'
+    if (permStatus === 'denied') return 'Permission blocked — enable in browser settings'
+    if (settings.notificationsEnabled) return 'You will be notified at each prayer time'
+    return 'Tap to enable prayer time alerts'
+  }
 
   return (
     <div className="settings-page">
@@ -94,6 +116,26 @@ export default function Settings({ onRefreshLocation }) {
               onClick={() => set('numerals', o.key)}
             />
           ))}
+        </div>
+      </div>
+
+      {/* ── Notifications ── */}
+      <div className="settings-section">
+        <p className="settings-section-title">Notifications</p>
+        <div className="settings-group">
+          <button
+            className={`settings-option${settings.notificationsEnabled ? ' active' : ''}`}
+            onClick={handleNotifToggle}
+            disabled={permStatus === 'unsupported' || permStatus === 'denied'}
+          >
+            <div className="settings-option-text">
+              <span className="settings-option-label">Prayer Time Alerts</span>
+              <span className="settings-option-sub">{notifSubtext()}</span>
+            </div>
+            <span className={`notif-toggle${settings.notificationsEnabled ? ' on' : ''}`}>
+              {settings.notificationsEnabled ? 'ON' : 'OFF'}
+            </span>
+          </button>
         </div>
       </div>
 
