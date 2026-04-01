@@ -2683,8 +2683,7 @@ body.quran-fs { background: #F5EDD8 !important; }
 .settings-link-row   .settings-option-label { color: var(--lapis); }
 .settings-link-row { text-decoration: none; }
 
-.notif-toggle {
-  font-size: 11px;
+.notif-toggle {  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
   padding: 3px 8px;
@@ -2696,6 +2695,112 @@ body.quran-fs { background: #F5EDD8 !important; }
 .notif-toggle.on {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MASJID FINDER
+═══════════════════════════════════════════════════════════════════════ */
+.masajid-page {
+  padding: 4px 0 40px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.masajid-header {
+  padding: 0 20px 12px;
+}
+
+.masajid-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.masajid-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.masajid-error { color: #e67a7a; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.masajid-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border-bright);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.masajid-list {
+  list-style: none;
+  margin: 0 16px;
+  padding: 0;
+  background: var(--glass-mid);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.masajid-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.masajid-item:last-child { border-bottom: none; }
+.masajid-item:active     { background: rgba(212, 151, 90, 0.06); }
+
+.masajid-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.masajid-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.masajid-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.masajid-dist {
+  font-size: 12px;
+  color: var(--gold-dim);
+}
+
+.masajid-arrow {
+  font-size: 16px;
+  color: var(--lapis);
+  flex-shrink: 0;
+}
+
+.masajid-credit {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 16px;
+  padding: 0 20px;
+  opacity: 0.6;
 }
 
 .settings-footer {

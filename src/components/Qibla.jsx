@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getQiblaDirection } from '../utils/qibla'
+import MasjidFinder from './MasjidFinder'
 
 const DEFAULT = { lat: 44.9778, lng: -93.2650 }
 const TICK_COUNT = 60   // finer ticks for richer ring
 
 export default function Qibla() {
+  const [subTab, setSubTab]             = useState('compass')
   const [qibla, setQibla]           = useState(null)
   const [heading, setHeading]       = useState(0)
   const smoothHeading               = useRef(0)
@@ -109,6 +111,15 @@ export default function Qibla() {
 
   return (
     <div className="qibla-page">
+      {/* Sub-tabs */}
+      <div className="adhkar-tabs" style={{ marginBottom: '8px' }}>
+        <button className={`adhkar-tab${subTab === 'compass' ? ' active' : ''}`} onClick={() => setSubTab('compass')}>Compass</button>
+        <button className={`adhkar-tab${subTab === 'masajid' ? ' active' : ''}`} onClick={() => setSubTab('masajid')}>Nearby Masajid</button>
+      </div>
+
+      {subTab === 'masajid' && <MasjidFinder />}
+
+      {subTab === 'compass' && <>
       <div className="qibla-title-row">
         <h2 className="qibla-title">Qibla</h2>
         <span className="qibla-arabic">القبلة</span>
@@ -221,6 +232,7 @@ export default function Qibla() {
           {aligned ? 'You are facing the Qibla.' : 'Rotate until the needle points straight up.'}
         </p>
       )}
+      </>}
     </div>
   )
 }
