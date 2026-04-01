@@ -1698,6 +1698,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;          /* needed for absolutely-positioned cached-bg */
+  touch-action: pan-x pinch-zoom; /* portrait: horizontal swipe + pinch, no vertical scroll */
 }
 
 /* Two-page spread */
@@ -1729,7 +1731,7 @@ body {
   filter: sepia(0.7) brightness(0.83) contrast(1.15);
 }
 .quran-page-img.wide-page {
-  transform: scale(1.62);
+  transform: scale(1.35);
   transform-origin: center center;
 }
 .quran-page-img.loaded {
@@ -1764,6 +1766,77 @@ body {
   gap: 20px;
   padding: 24px;
 }
+
+/* Cached previous page — shown behind while new page loads, prevents flash */
+.quran-cached-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Mobile landscape: single page fills width, vertical scroll allowed ── */
+@media (orientation: landscape) and (max-width: 1099px) {
+  .quran-img-wrap {
+    overflow-y: auto;
+    align-items: flex-start;
+    touch-action: pan-y pinch-zoom; /* allow vertical scroll + zoom in landscape */
+  }
+  .quran-page-img {
+    height: auto;
+    min-height: unset;
+    width: 100%;
+  }
+}
+
+/* ── Search bar inside the Jump to Surah sheet ── */
+.quran-search-bar {
+  position: relative;
+  padding: 8px 16px 4px;
+  flex-shrink: 0;
+}
+.quran-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 36px 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(90,55,15,0.35);
+  background: #fff;
+  color: #1A0800;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+}
+.quran-search-input::placeholder { color: rgba(90,55,15,0.45); }
+.quran-search-input:focus { border-color: rgba(90,55,15,0.65); background: #fffdf8; }
+.quran-search-clear {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(90,55,15,0.15);
+  color: #5A3710;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+/* Dark mode search */
+.quran-dark .quran-search-input {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(212,151,90,0.45);
+  color: #F0E6D8;
+}
+.quran-dark .quran-search-input::placeholder { color: rgba(240,230,216,0.45); }
+.quran-dark .quran-search-input:focus { background: rgba(255,255,255,0.12); border-color: rgba(212,151,90,0.7); }
+.quran-dark .quran-search-clear { background: rgba(212,151,90,0.2); color: #E0B870; }
+
+/* Sheet lifts above keyboard smoothly */
+.quran-sheet { transition: margin-bottom 0.18s ease; }
 
 /* ── Fullscreen / distraction-free mode ──────────────────────────── */
 body.quran-fs { background: #F5EDD8 !important; }
@@ -2114,9 +2187,9 @@ body.quran-fs { background: #F5EDD8 !important; }
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #C8A870;
   padding: 14px 18px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   flex-shrink: 0;
 }
 
@@ -2124,8 +2197,7 @@ body.quran-fs { background: #F5EDD8 !important; }
   padding: 32px 18px;
   text-align: center;
   font-size: 13px;
-  color: var(--text-muted);
-  opacity: 0.6;
+  color: #A08060;
 }
 
 .quran-sheet-list {
@@ -2149,7 +2221,7 @@ body.quran-fs { background: #F5EDD8 !important; }
 
 .qsi-num {
   font-size: 11px;
-  color: var(--text-muted);
+  color: #A08868;
   width: 22px;
   flex-shrink: 0;
   text-align: right;
@@ -2166,7 +2238,7 @@ body.quran-fs { background: #F5EDD8 !important; }
 
 .qsi-en {
   font-size: 11px;
-  color: var(--text-dim);
+  color: #B09878;
   flex: 1.2;
   white-space: nowrap;
   overflow: hidden;

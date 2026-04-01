@@ -33,6 +33,13 @@ const RECITERS = [
 ]
 const surahCache = {}
 
+// Normalised list for instant surah search (114 entries — no API needed)
+const SEARCH_NORM = SURAHS.map(([startPage, ar, en], i) => ({
+  num: i + 1, page: startPage, ar, en,
+  key: en.toLowerCase().replace(/[āīūḥḍṣṭẓʿʾ]/g, c =>
+    ({ ā:'a',ī:'i',ū:'u',ḥ:'h',ḍ:'d',ṣ:'s',ṭ:'t',ẓ:'z',ʿ:'',ʾ:'' }[c] ?? c))
+}))
+
 
 
 export default function QuranReader() {
@@ -65,13 +72,19 @@ export default function QuranReader() {
   const [textData, setTextData]           = useState(null)
   const [textLoading, setTextLoading]     = useState(false)
   const [textError, setTextError]         = useState(false)
-  const [activeAyah, setActiveAyah]       = useState(null)
+  const [activeAyah, setActiveAyah]         = useState(null)
   const [ayahAudioState, setAyahAudioState] = useState('idle')
-  const inputRef    = useRef(null)
-  const touchStartX = useRef(null)
-  const audioRef    = useRef(null)
-  const ayahAudioRef = useRef(null)
-  const seqRef      = useRef({ surahNum: null, ayahNum: null, total: null })
+  const inputRef      = useRef(null)
+  const wrapRef       = useRef(null)         // img-wrap DOM ref for non-passive touchmove
+  const touchRef      = useRef({ x: 0, y: 0, axis: null }) // axis: null|'h'|'v'|'pinch'
+  const goRef         = useRef(null)         // always-current go() for keyboard handler
+  const lastLoadedUrl = useRef(null)         // cached page URL — prevents flash on page turn
+  const audioRef      = useRef(null)
+  const ayahAudioRef  = useRef(null)
+  const seqRef        = useRef({ surahNum: null, ayahNum: null, total: null })
+  const [swipeDx, setSwipeDx]       = useState(0)
+  const [searchQ, setSearchQ]       = useState('')
+  const [kbHeight, setKbHeight]     = useState(0)  // virtual keyboard height in px
 
 
   useEffect(() => {
@@ -91,32 +104,82 @@ export default function QuranReader() {
     pre2.src = pageUrl(Math.max(page - step, 1))
   }, [page, twoPage])
 
+  // Track virtual keyboard height via visualViewport
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      const kb = window.innerHeight - vv.height - vv.offsetTop
+      setKbHeight(Math.max(0, kb))
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+  }, [])
+
   const go = d => {
     const step = twoPage ? d * 2 : d
     setPage(p => Math.max(1, Math.min(TOTAL_PAGES, p + step)))
   }
+  goRef.current = go  // always-current reference so keyboard handler never goes stale
 
-  // Keyboard navigation
+  // Keyboard navigation ([] deps safe because we use goRef)
   useEffect(() => {
     const onKey = e => {
       if (e.target.tagName === 'INPUT') return
-      if (e.key === 'ArrowLeft')  go(1)
-      if (e.key === 'ArrowRight') go(-1)
-      if (e.key === 'ArrowUp')    go(-10)
-      if (e.key === 'ArrowDown')  go(10)
+      if (e.key === 'ArrowLeft')  goRef.current(1)
+      if (e.key === 'ArrowRight') goRef.current(-1)
+      if (e.key === 'ArrowUp')    goRef.current(-10)
+      if (e.key === 'ArrowDown')  goRef.current(10)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
-  const onTouchStart = e => { touchStartX.current = e.touches[0].clientX }
-  const onTouchEnd   = e => {
-    if (viewMode === 'text') return  // don't swipe pages in text mode
-    if (touchStartX.current === null) return
-    const dx = touchStartX.current - e.changedTouches[0].clientX
-    if (Math.abs(dx) > 55) go(dx > 0 ? -1 : 1)
-    touchStartX.current = null
+  // Touch start: record position, bail on multi-touch (pinch) or browser zoom
+  const onTouchStart = e => {
+    if (viewMode === 'text') return
+    if ((window.visualViewport?.scale ?? 1) > 1.05) return  // zoomed: let browser pan
+    if (e.touches.length > 1) { touchRef.current.axis = 'pinch'; setSwipeDx(0); return }
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, axis: null }
   }
+
+  // Touch end: commit page turn or spring back
+  const onTouchEnd = e => {
+    if (viewMode === 'text') return
+    if ((window.visualViewport?.scale ?? 1) > 1.05) return
+    const { x: startX, axis } = touchRef.current
+    touchRef.current = { x: 0, y: 0, axis: null }
+    setSwipeDx(0)
+    if (axis !== 'h') return
+    if (e.touches.length > 0) return
+    const dx = e.changedTouches[0].clientX - startX
+    if (Math.abs(dx) > 55) go(dx > 0 ? 1 : -1)
+  }
+
+  // Non-passive touchmove: axis-lock, prevent vertical hijack, live drag follow
+  // Skipped entirely when user has pinch-zoomed (browser handles panning)
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const onMove = e => {
+      if (viewMode === 'text') return
+      if ((window.visualViewport?.scale ?? 1) > 1.05) return  // zoomed: let browser pan
+      const t = touchRef.current
+      if (t.axis === 'pinch') return
+      if (e.touches.length > 1) { t.axis = 'pinch'; setSwipeDx(0); return }
+      const dx = e.touches[0].clientX - t.x
+      const dy = e.touches[0].clientY - t.y
+      if (!t.axis) {
+        if (Math.abs(dx) > Math.abs(dy) + 3) t.axis = 'h'
+        else if (Math.abs(dy) > 5) { t.axis = 'v'; return }
+        else return
+      }
+      if (t.axis === 'h') { e.preventDefault(); setSwipeDx(dx) }
+    }
+    el.addEventListener('touchmove', onMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onMove)
+  }, [viewMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const surah = getSurahForPage(page)
   const surahNum = surah?.num
@@ -211,9 +274,9 @@ export default function QuranReader() {
     setReciterIdx(idx)
     localStorage.setItem('maqam_reciter', String(idx))
     setShowReciter(false)
-    // Reset current audio so it uses new reciter
     stopAudio()
   }
+
 
   const sliderJuz   = getJuzForPage(sliderVal)
   const sliderHizb  = getHizbQuarterForPage(sliderVal)
@@ -306,6 +369,7 @@ export default function QuranReader() {
           <button className="quran-reciter-btn" onClick={() => setShowReciter(v => !v)} aria-label="Select reciter">
             <span className="quran-reciter-label">{reciter.label}</span>
           </button>
+
         </div>
         <div className="quran-bar-right">
           {surah && <span className="quran-surah-ar">{surah.ar}</span>}
@@ -383,7 +447,17 @@ export default function QuranReader() {
           )}
         </div>
       ) : (
-        <div className={`quran-img-wrap${twoPage && page > 1 ? ' two-page' : ''}`}>
+        <div
+          className={`quran-img-wrap${twoPage && page > 1 ? ' two-page' : ''}`}
+          ref={wrapRef}
+          style={swipeDx
+            ? { transform: `translateX(${swipeDx}px)`, transition: 'none' }
+            : { transition: 'transform 0.22s ease' }}
+        >
+          {/* Previous page stays visible while new page loads — eliminates flash */}
+          {!imgLoaded && !imgError && lastLoadedUrl.current && (
+            <img src={lastLoadedUrl.current} className="quran-page-img loaded quran-cached-bg" aria-hidden="true" />
+          )}
           {!imgLoaded && !imgError && <div className="quran-loading-abs" />}
           {imgError && (
             <div className="quran-error-abs">
@@ -391,15 +465,15 @@ export default function QuranReader() {
               <p>Could not load page {page}</p>
             </div>
           )}
-          {/* Right page (odd numbers in mushaf are right-hand pages) */}
+          {/* Right page */}
           <img
             src={pageUrl(page)}
             alt={`Quran page ${page}`}
             className={`quran-page-img${imgLoaded ? ' loaded' : ''}${page <= 2 ? ' wide-page' : ''}`}
-            onLoad={() => setImgLoaded(true)}
+            onLoad={() => { lastLoadedUrl.current = pageUrl(page); setImgLoaded(true) }}
             onError={() => { setImgError(true); setImgLoaded(false) }}
           />
-          {/* Left page — shown in two-page mode when page > 1 */}
+          {/* Left page — two-page mode only */}
           {twoPage && page > 1 && page < TOTAL_PAGES && (
             <img
               src={pageUrl(page + 1)}
@@ -532,29 +606,55 @@ export default function QuranReader() {
         </div>
       )}
 
-      {showJump && (
-        <div className="quran-overlay" onClick={() => setShowJump(false)}>
-          <div className="quran-sheet" onClick={e => e.stopPropagation()}>
-            <p className="quran-sheet-title">Jump to Surah</p>
-            <div className="quran-sheet-list">
-              {SURAHS.map(([startPage, ar, en], i) => (
-                <button
-                  key={i}
-                  className={'quran-sheet-item' + (
-                    page >= startPage && (i === SURAHS.length - 1 || page < SURAHS[i + 1][0]) ? ' active' : ''
-                  )}
-                  onClick={() => { setPage(startPage); setShowJump(false) }}
-                >
-                  <span className="qsi-num">{i + 1}</span>
-                  <span className="qsi-ar">{ar}</span>
-                  <span className="qsi-en">{en}</span>
-                  <span className="qsi-pg">{startPage}</span>
-                </button>
-              ))}
+      {showJump && (() => {
+        const q = searchQ.trim().toLowerCase()
+        const results = q
+          ? SEARCH_NORM.filter(s =>
+              s.ar.includes(searchQ.trim()) ||
+              s.en.toLowerCase().includes(q) ||
+              s.key.includes(q.replace(/[^a-z0-9 ]/g, ''))
+            )
+          : SEARCH_NORM
+        return (
+          <div className="quran-overlay" onClick={() => { setShowJump(false); setSearchQ('') }}>
+            <div className="quran-sheet" style={{ marginBottom: kbHeight }} onClick={e => e.stopPropagation()}>
+              <p className="quran-sheet-title">Jump to Surah</p>
+              <div className="quran-search-bar">
+                <input
+                  className="quran-search-input"
+                  type="text"
+                  placeholder="Search surah…"
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                  autoFocus
+                />
+                {searchQ && (
+                  <button className="quran-search-clear" onClick={() => setSearchQ('')}>×</button>
+                )}
+              </div>
+              <div className="quran-sheet-list">
+                {results.map(s => (
+                  <button
+                    key={s.num}
+                    className={'quran-sheet-item' + (page >= s.page && (s.num === SURAHS.length || page < SURAHS[s.num][0]) ? ' active' : '')}
+                    onClick={() => { setPage(s.page); setShowJump(false); setSearchQ('') }}
+                  >
+                    <span className="qsi-num">{s.num}</span>
+                    <span className="qsi-ar">{s.ar}</span>
+                    <span className="qsi-en">{s.en}</span>
+                    <span className="qsi-pg">{s.page}</span>
+                  </button>
+                ))}
+                {results.length === 0 && (
+                  <p className="quran-sheet-empty">No surah found</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
+
+
     </div>
   )
 }
