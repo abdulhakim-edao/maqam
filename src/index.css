@@ -2254,6 +2254,29 @@ body.quran-fs { background: #F5EDD8 !important; }
   text-align: right;
 }
 
+/* Ayah search result row: wraps the Arabic text */
+.quran-ayah-result {
+  align-items: flex-start;
+  padding: 10px 18px;
+}
+.quran-ayah-result .qsi-num {
+  padding-top: 3px;
+  min-width: 36px;
+  font-size: 11px;
+  letter-spacing: 0.2px;
+}
+.qar-text {
+  font-family: var(--font-arabic);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  flex: 1;
+  text-align: right;
+  direction: rtl;
+  white-space: normal;
+  word-break: break-word;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    RESPONSIVE — Tablet (≥768px) + Desktop (≥1100px)
    Mobile  (<768px): bottom-nav + top header — unchanged

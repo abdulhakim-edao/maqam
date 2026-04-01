@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { getSurahForPage, getJuzForPage, getHizbQuarterForPage, SURAHS, TOTAL_PAGES } from '../utils/quranData'
 
 const STORAGE_KEY = 'maqam_quran_page'
@@ -32,6 +32,13 @@ const RECITERS = [
   { id: 'ar.husary',   label: 'Husary',  eay: 'Husary_128kbps' },
 ]
 const surahCache = {}
+
+// Strip harakat & normalise alef variants for Arabic substring search
+const normAr = s => s
+  .replace(/[\u064B-\u065F\u0670]/g, '')  // harakat
+  .replace(/\u0640/g, '')                  // tatweel
+  .replace(/[\u0623\u0625\u0622]/g, '\u0627') // أإآ → ا
+  .replace(/\u0649/g, '\u064A')            // ى → ي
 
 // Normalised list for instant surah search (114 entries — no API needed)
 const SEARCH_NORM = SURAHS.map(([startPage, ar, en], i) => ({
@@ -85,6 +92,10 @@ export default function QuranReader() {
   const [swipeDx, setSwipeDx]       = useState(0)
   const [searchQ, setSearchQ]       = useState('')
   const [kbHeight, setKbHeight]     = useState(0)  // virtual keyboard height in px
+  const [showAyahSearch, setShowAyahSearch] = useState(false)
+  const [ayahQ, setAyahQ]           = useState('')
+  const [ayahIndex, setAyahIndex]   = useState(null)
+  const [ayahIndexLoading, setAyahIndexLoading] = useState(false)
 
 
   useEffect(() => {
@@ -325,6 +336,35 @@ export default function QuranReader() {
     setEditingPage(false)
   }
 
+  const openAyahSearch = async () => {
+    setShowAyahSearch(true)
+    if (!ayahIndex && !ayahIndexLoading) {
+      setAyahIndexLoading(true)
+      try {
+        const r = await fetch('/quran-index.json')
+        setAyahIndex(await r.json())
+      } catch (e) {
+        console.error('Failed to load ayah index', e)
+      } finally {
+        setAyahIndexLoading(false)
+      }
+    }
+  }
+
+  const ayahResults = useMemo(() => {
+    if (!ayahIndex || !ayahQ.trim()) return []
+    const q = normAr(ayahQ.trim())
+    if (q.length < 2) return []
+    const out = []
+    for (const entry of ayahIndex) {
+      if (normAr(entry[3]).includes(q)) {
+        out.push(entry)
+        if (out.length >= 25) break
+      }
+    }
+    return out
+  }, [ayahIndex, ayahQ])
+
   return (
     <div
       className={`quran-page${darkMode ? ' quran-dark' : ''}`}
@@ -335,6 +375,9 @@ export default function QuranReader() {
         <div className="quran-bar-left">
           <button className="quran-jump-btn" onClick={() => setShowJump(v => !v)} aria-label="Jump to surah">
             <MenuIcon />
+          </button>
+          <button className="quran-jump-btn" onClick={openAyahSearch} aria-label="Search ayah">
+            <SearchIcon />
           </button>
           <button
             className={`quran-bookmark-btn${isBookmarked ? ' bookmarked' : ''}`}
@@ -606,6 +649,54 @@ export default function QuranReader() {
         </div>
       )}
 
+      {showAyahSearch && (
+        <div className="quran-overlay" onClick={() => { setShowAyahSearch(false); setAyahQ('') }}>
+          <div className="quran-sheet" style={{ marginBottom: kbHeight }} onClick={e => e.stopPropagation()}>
+            <p className="quran-sheet-title">Search Ayah</p>
+            <div className="quran-search-bar">
+              <input
+                className="quran-search-input"
+                type="search"
+                inputMode="text"
+                dir="rtl"
+                placeholder="ابحث في آيات القرآن…"
+                value={ayahQ}
+                onChange={e => setAyahQ(e.target.value)}
+                autoFocus
+              />
+              {ayahQ && (
+                <button className="quran-search-clear" onClick={() => setAyahQ('')}>×</button>
+              )}
+            </div>
+            <div className="quran-sheet-list">
+              {ayahIndexLoading && (
+                <p className="quran-sheet-empty">Loading index…</p>
+              )}
+              {!ayahIndexLoading && ayahQ.trim().length > 0 && ayahQ.trim().length < 2 && (
+                <p className="quran-sheet-empty">Type at least 2 characters</p>
+              )}
+              {!ayahIndexLoading && !ayahQ.trim() && (
+                <p className="quran-sheet-empty">Type Arabic text to find an ayah</p>
+              )}
+              {!ayahIndexLoading && ayahQ.trim().length >= 2 && ayahResults.length === 0 && (
+                <p className="quran-sheet-empty">No results</p>
+              )}
+              {ayahResults.map(([s, a, p, t]) => (
+                <button
+                  key={`${s}-${a}`}
+                  className="quran-sheet-item quran-ayah-result"
+                  onClick={() => { setPage(p); setShowAyahSearch(false); setAyahQ('') }}
+                >
+                  <span className="qsi-num">{s}:{a}</span>
+                  <span className="qar-text">{t.length > 70 ? t.slice(0, 70) + '…' : t}</span>
+                  <span className="qsi-pg">p.{p}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showJump && (() => {
         const q = searchQ.trim().toLowerCase()
         const results = q
@@ -667,6 +758,14 @@ function MenuIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" {...IC} stroke="currentColor">
       <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  )
+}
+function SearchIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" {...IC} stroke="currentColor">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   )
 }
