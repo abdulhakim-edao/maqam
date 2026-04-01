@@ -1,4 +1,4 @@
-import { Coordinates, PrayerTimes, CalculationMethod } from "adhan";
+import { Coordinates, PrayerTimes, CalculationMethod, Madhab, HighLatitudeRule } from "adhan";
 
 export const CALC_METHODS = [
   { key: "NorthAmerica", label: "ISNA", sub: "North America" },
@@ -18,11 +18,27 @@ export function getPrayerTimes(
   longitude,
   date = new Date(),
   methodKey = "NorthAmerica",
+  asrMadhab = "standard",
+  highLatitude = "middleOfNight",
 ) {
   const coords = new Coordinates(latitude, longitude);
   const methodFn =
     CalculationMethod[methodKey] ?? CalculationMethod.NorthAmerica;
   const params = methodFn();
+
+  // Asr madhab
+  params.madhab = asrMadhab === "hanafi" ? Madhab.Hanafi : Madhab.Shafi;
+
+  // High latitude rule
+  const hlMap = {
+    none:           null,
+    middleOfNight:  HighLatitudeRule.MiddleOfTheNight,
+    seventhOfNight: HighLatitudeRule.SeventhOfTheNight,
+    twilightAngle:  HighLatitudeRule.TwilightAngle,
+  };
+  const hl = hlMap[highLatitude]
+  if (hl !== null && hl !== undefined) params.highLatitudeRule = hl
+
   return new PrayerTimes(coords, date, params);
 }
 

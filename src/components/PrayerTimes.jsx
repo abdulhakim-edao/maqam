@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { getPrayerTimes, getPrayersList, formatTime, formatCountdown, CALC_METHODS } from '../utils/prayerCalc'
+import { getPrayerTimes, getPrayersList, formatTime, formatCountdown } from '../utils/prayerCalc'
 import { getRamadanInfo } from '../utils/ramadan'
+import { useSettings } from '../utils/settings'
 
 const DEFAULT_LOCATION = { lat: 44.9778, lng: -93.2650 }
-const METHOD_KEY = 'maqam_calc_method'
 
 function getHijriDate(date = new Date()) {
   try {
@@ -22,11 +22,9 @@ export default function PrayerTimes() {
   const [nextKey, setNextKey] = useState(null)
   const [countdown, setCountdown] = useState('')
   const [locationMsg, setLocationMsg] = useState(null)
-  const [methodKey, setMethodKey] = useState(
-    () => localStorage.getItem(METHOD_KEY) ?? 'NorthAmerica'
-  )
-  const [showMethodPicker, setShowMethodPicker] = useState(false)
   const [tomorrowFajr, setTomorrowFajr] = useState(null)
+  const { settings } = useSettings()
+  const { calcMethod: methodKey, asrMadhab, highLatitude } = settings
   const [isFasting, setIsFasting] = useState(false)
   const [ramadanCountdown, setRamadanCountdown] = useState('')
 
@@ -52,7 +50,7 @@ export default function PrayerTimes() {
   // Calculate prayer times (recalculates when location or method changes)
   useEffect(() => {
     if (!location) return
-    const times = getPrayerTimes(location.lat, location.lng, new Date(), methodKey)
+    const times = getPrayerTimes(location.lat, location.lng, new Date(), methodKey, asrMadhab, highLatitude)
     setPrayerTimes(times)
     setPrayers(getPrayersList(times))
     setNextKey(times.nextPrayer())
@@ -60,9 +58,9 @@ export default function PrayerTimes() {
     // Tomorrow's Fajr needed for Ramadan suhoor countdown
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
-    const tTimes = getPrayerTimes(location.lat, location.lng, tomorrow, methodKey)
+    const tTimes = getPrayerTimes(location.lat, location.lng, tomorrow, methodKey, asrMadhab, highLatitude)
     setTomorrowFajr(tTimes.fajr)
-  }, [location, methodKey])
+  }, [location, methodKey, asrMadhab, highLatitude])
 
   // Live countdown
   useEffect(() => {
@@ -90,17 +88,10 @@ export default function PrayerTimes() {
     return () => clearInterval(id)
   }, [prayerTimes, isRamadan, tomorrowFajr])
 
-  const changeMethod = (key) => {
-    localStorage.setItem(METHOD_KEY, key)
-    setMethodKey(key)
-    setShowMethodPicker(false)
-  }
-
   const nextPrayer = prayers.find(p => p.key === nextKey)
   const now = new Date()
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
   const hijriStr = getHijriDate(now)
-  const currentMethod = CALC_METHODS.find(m => m.key === methodKey)
   const suhoorEndsAt = prayerTimes
     ? (now < prayerTimes.fajr ? prayerTimes.fajr : tomorrowFajr)
     : null
@@ -180,29 +171,6 @@ export default function PrayerTimes() {
             </div>
           )
         })}
-      </div>
-
-      {/* Calculation method */}
-      <div className="method-section">
-        <button className="method-toggle" onClick={() => setShowMethodPicker(v => !v)}>
-          <span className="method-label">Calculation</span>
-          <span className="method-value">{currentMethod?.label}</span>
-          <span className="method-chevron">{showMethodPicker ? '▲' : '▼'}</span>
-        </button>
-        {showMethodPicker && (
-          <div className="method-picker">
-            {CALC_METHODS.map(m => (
-              <button
-                key={m.key}
-                className={`method-option${m.key === methodKey ? ' active' : ''}`}
-                onClick={() => changeMethod(m.key)}
-              >
-                <span className="method-option-label">{m.label}</span>
-                <span className="method-option-sub">{m.sub}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {locationMsg && <p className="location-msg">{locationMsg}</p>}

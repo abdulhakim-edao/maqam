@@ -2585,6 +2585,114 @@ body.quran-fs { background: #F5EDD8 !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   SETTINGS SCREEN
+═══════════════════════════════════════════════════════════════════════ */
+.settings-page {
+  padding: 12px 0 40px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold-dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 0 20px 8px;
+}
+
+.settings-group-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  padding: 8px 20px 4px;
+}
+
+.settings-group {
+  background: var(--glass-mid);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  margin: 0 16px;
+  overflow: hidden;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  background: none;
+  transition: background 0.1s;
+  gap: 10px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+.settings-option:last-child { border-bottom: none; }
+.settings-option:active     { background: rgba(212, 151, 90, 0.06); }
+.settings-option.active     { background: rgba(212, 151, 90, 0.07); }
+.settings-static-row        { cursor: default; }
+.settings-static-row:active { background: none; }
+
+.settings-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-option-label {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.settings-option-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.settings-option-check {
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.settings-option-value {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.settings-option-arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.settings-action-row .settings-option-label { color: var(--lapis); }
+.settings-link-row   .settings-option-label { color: var(--lapis); }
+.settings-link-row { text-decoration: none; }
+
+.settings-footer {
+  text-align: center;
+  font-family: var(--font-arabic);
+  font-size: 15px;
+  color: var(--text-muted);
+  padding: 8px 0 0;
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    RESPONSIVE — Tablet (≥768px) + Desktop (≥1100px)
    Mobile  (<768px): bottom-nav + top header — unchanged
    Tablet  (≥768px): left sidebar 72px icons-only, header+bottom-nav hidden

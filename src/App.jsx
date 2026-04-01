@@ -4,6 +4,8 @@ import Qibla from './components/Qibla'
 import Adhkar from './components/Adhkar'
 import IslamicCalendar from './components/IslamicCalendar'
 import QuranReader from './components/QuranReader'
+import Settings from './components/Settings'
+import { SettingsProvider } from './utils/settings'
 import './App.css'
 
 const TABS = [
@@ -12,13 +14,16 @@ const TABS = [
   { id: 'adhkar',   label: 'Adhkar',   Icon: AdhkarIcon },
   { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
   { id: 'quran',    label: 'Quran',    Icon: QuranIcon },
+  { id: 'settings', label: 'Settings', Icon: SettingsIcon },
 ]
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('prayer')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [locationRefreshKey, setLocationRefreshKey] = useState(0)
 
   return (
+    <SettingsProvider>
     <div className={`app${activeTab === 'quran' ? ' quran-active' : ''}${!sidebarOpen ? ' sidebar-collapsed' : ''}`}>
 
       {/* Sidebar — tablet/desktop only */}
@@ -62,11 +67,12 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        {activeTab === 'prayer'   && <PrayerTimes />}
+        {activeTab === 'prayer'   && <PrayerTimes key={locationRefreshKey} />}
         {activeTab === 'qibla'    && <Qibla />}
         {activeTab === 'adhkar'   && <Adhkar />}
         {activeTab === 'calendar' && <IslamicCalendar />}
         {activeTab === 'quran'    && <QuranReader />}
+        {activeTab === 'settings' && <Settings onRefreshLocation={() => { setLocationRefreshKey(k => k+1); setActiveTab('prayer') }} />}
       </main>
 
       {/* Bottom nav — mobile only */}
@@ -84,6 +90,7 @@ export default function App() {
         ))}
       </nav>
     </div>
+    </SettingsProvider>
   )
 }
 
@@ -136,6 +143,16 @@ function QuranIcon({ active }) {
       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
       <path d="M12 7c-1.5 0-2.5 1-2.5 2.5S10.5 12 12 13c1.5-1 2.5-2 2.5-3.5S13.5 7 12 7z" fill={active ? 'rgba(212,151,90,0.25)' : 'none'} />
+    </svg>
+  )
+}
+
+function SettingsIcon({ active }) {
+  const c = active ? '#D4975A' : 'currentColor'
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   )
 }
